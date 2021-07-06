@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -27,7 +30,7 @@ func main() {
 
 type Host struct {
 	gorm.Model
-	host string
+	Hostname string `gorm:"index" db:"hostname"`
 }
 
 type Response struct {
@@ -70,7 +73,7 @@ func allowUrl(encodedUrl string) (bool, bool) {
 		return false, false
 	}
 
-	host := Host{host: u.Host}
+	host := Host{Hostname: u.Host}
 	db.Find(&host)
 
 	if host.ID != 0 {
@@ -81,5 +84,28 @@ func allowUrl(encodedUrl string) (bool, bool) {
 }
 
 func populateHosts() {
+	rawHostsUrl := "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts"
+	res, err := http.Get(rawHostsUrl)
+	defer res.Body.Close()
 
+	if err != nil {
+		panic("unable to fetch hosts source")
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic("unable to read hosts source")
+	}
+	lines := strings.Split(string(body), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "0.0.0.0") {
+			hostname := strings.ReplaceAll(line, "0.0.0.0 ", "")
+			host := Host{Hostname: hostname}
+			err := db.Where(Host{Hostname: hostname}).FirstOrCreate(&host).Error
+			if err != nil {
+				panic("unable to write host to database: " + hostname)
+			}
+			fmt.Println("wrote: " + hostname)
+		}
+	}
 }
