@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,6 +51,7 @@ func allowHandler(w http.ResponseWriter, r *http.Request) {
 	res := Response{Allow: allow}
 	js, err := json.Marshal(res)
 	if err != nil {
+		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -65,18 +67,18 @@ func allowUrl(encodedUrl string) (bool, bool) {
 
 	decoded, err := base64.StdEncoding.DecodeString(encodedUrl)
 	if err != nil {
+		log.Print(err)
 		return false, false
 	}
 
 	u, err := url.Parse(string(decoded))
 	if err != nil {
+		log.Print(err)
 		return false, false
 	}
 
-	host := Host{Hostname: u.Host}
-	db.Find(&host)
-
-	if host.ID != 0 {
+	if found := db.Where("hostname = ?", u.Host).RowsAffected; found != 0 {
+		log.Print("host.id not equal to zero")
 		return true, false
 	}
 
