@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+
+	log "github.com/sirupsen/logrus"
+
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,14 +20,19 @@ var db *gorm.DB
 
 func main() {
 	var err error
+	log.Info("Connecting to database...")
 	db, err = gorm.Open(sqlite.Open("hosts.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
+	log.Info("Connect to database.")
+	log.Info("Migrating database...")
 	db.AutoMigrate(&Host{})
+	log.Info("Migrated database.")
 	populateHosts()
 
 	http.HandleFunc("/allow", allowHandler)
+	log.Info("Listening on port 8080...")
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -39,6 +46,7 @@ type Response struct {
 }
 
 func allowHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info(r)
 	w.Header().Set("Content-Type", "application/json")
 	encodedUrl := r.URL.Query().Get("url") // base64 encoded url
 	ok, allow := allowUrl(encodedUrl)
@@ -51,13 +59,14 @@ func allowHandler(w http.ResponseWriter, r *http.Request) {
 	res := Response{Allow: allow}
 	js, err := json.Marshal(res)
 	if err != nil {
-		log.Print(err)
+		log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
+	log.Info(w)
 }
 
 func allowUrl(encodedUrl string) (bool, bool) {
@@ -67,18 +76,20 @@ func allowUrl(encodedUrl string) (bool, bool) {
 
 	decoded, err := base64.StdEncoding.DecodeString(encodedUrl)
 	if err != nil {
-		log.Print(err)
+		log.Error(err)
 		return false, false
 	}
 
 	u, err := url.Parse(string(decoded))
 	if err != nil {
-		log.Print(err)
+		log.Error(err)
 		return false, false
 	}
 
-	if found := db.Where("hostname = ?", u.Host).RowsAffected; found != 0 {
-		log.Print("host.id not equal to zero")
+	host := Host{}
+	db.Where("hostname = ?", u.Host).First(&host)
+	if host.ID != 0 {
+		log.Info("host.id not equal to zero")
 		return true, false
 	}
 
@@ -86,6 +97,7 @@ func allowUrl(encodedUrl string) (bool, bool) {
 }
 
 func populateHosts() {
+	log.Info("Populating hosts...")
 	rawHostsUrl := "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts"
 	res, err := http.Get(rawHostsUrl)
 	defer res.Body.Close()
@@ -110,4 +122,6 @@ func populateHosts() {
 			fmt.Println("wrote: " + hostname)
 		}
 	}
+
+	log.Info("Populated hosts.")
 }
