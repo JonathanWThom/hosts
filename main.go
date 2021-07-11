@@ -29,7 +29,7 @@ func main() {
 	log.Info("Migrating database...")
 	db.AutoMigrate(&Host{})
 	log.Info("Migrated database.")
-	populateHosts()
+	// populateHosts()
 
 	http.HandleFunc("/allow", allowHandler)
 	log.Info("Listening on port 8080...")
@@ -96,6 +96,7 @@ func allowUrl(encodedUrl string) (bool, bool) {
 	return true, true
 }
 
+// Unused for now, maybe add a refresh endpoint at some point
 func populateHosts() {
 	log.Info("Populating hosts...")
 	rawHostsUrl := "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts"
