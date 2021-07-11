@@ -18,6 +18,4 @@ COPY --from=build /hosts /hosts
 
 EXPOSE 8080
 
-USER nonroot:nonroot
-
 ENTRYPOINT ["/hosts"]
