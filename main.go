@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -33,8 +34,20 @@ func main() {
 	//populateHosts()
 
 	http.HandleFunc("/allow", allowHandler)
-	log.Info("Listening on port 8080...")
-	http.ListenAndServe(":8080", nil)
+	addr, err := determineListenAddress()
+	if err != nil {
+		panic(err)
+	}
+	log.Infof("Listening on port %v...\n", addr)
+	http.ListenAndServe(addr, nil)
+}
+
+func determineListenAddress() (string, error) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return ":" + port, nil
 }
 
 type Host struct {
