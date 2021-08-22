@@ -36,7 +36,7 @@ func main() {
 	http.HandleFunc("/allow", allowHandler)
 	addr := getEnv("PORT", "8080")
 	log.Infof("Listening on port %v...", addr)
-	http.ListenAndServe(addr, nil)
+	http.ListenAndServe(":"+addr, nil)
 }
 
 type Host struct {
