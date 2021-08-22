@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 
@@ -34,7 +35,7 @@ func main() {
 
 	http.HandleFunc("/allow", allowHandler)
 	addr := getEnv("PORT", "8080")
-	log.Info("Listening on port %v...", addr)
+	log.Infof("Listening on port %v...", addr)
 	http.ListenAndServe(addr, nil)
 }
 
@@ -109,7 +110,8 @@ func populateHosts() {
 		if strings.HasPrefix(line, "0.0.0.0") {
 			hostname := strings.ReplaceAll(line, "0.0.0.0 ", "")
 			// add shared salt key
-			hash := hmac.New(sha256.New, nil)
+			key := getEnv("HASH_KEY", "")
+			hash := hmac.New(sha256.New, []byte(key))
 			hash.Write([]byte(hostname))
 			encoded := base64.StdEncoding.EncodeToString(hash.Sum(nil))
 			host := Host{Hostname: encoded}
@@ -122,4 +124,11 @@ func populateHosts() {
 	}
 
 	log.Info("Populated hosts.")
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
