@@ -20,10 +20,26 @@ import (
 
 var db *gorm.DB
 
-func main() {
-	var err error
+type App struct {
+	db *gorm.DB
+}
+
+func newApp() *App {
+	return &App{
+		db: newDB(),
+	}
+}
+
+func (app *App) Serve() {
+	http.HandleFunc("/allow", allowHandler)
+	addr := getEnv("PORT", "8080")
+	log.Infof("Listening on port %v...", addr)
+	http.ListenAndServe(":"+addr, nil)
+}
+
+func newDB() *gorm.DB {
 	log.Info("Connecting to database...")
-	db, err = gorm.Open(sqlite.Open("hosts.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("hosts.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -31,12 +47,14 @@ func main() {
 	log.Info("Migrating database...")
 	db.AutoMigrate(&Host{})
 	log.Info("Migrated database.")
-	//populateHosts()
 
-	http.HandleFunc("/allow", allowHandler)
-	addr := getEnv("PORT", "8080")
-	log.Infof("Listening on port %v...", addr)
-	http.ListenAndServe(":"+addr, nil)
+	return db
+}
+
+func main() {
+	app := newApp()
+	//populateHosts()
+	app.Serve()
 }
 
 type Host struct {
