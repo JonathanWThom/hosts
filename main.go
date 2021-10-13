@@ -11,46 +11,12 @@ import (
 
 	"net/http"
 	"strings"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-var db *gorm.DB
-
-type App struct {
-	db *gorm.DB
-}
-
-func newApp() *App {
-	return &App{
-		db: newDB(),
-	}
-}
-
-func (app *App) Serve() {
-	http.HandleFunc("/allow", allowHandler)
-	addr := getEnv("PORT", "8080")
-	log.Infof("Listening on port %v...", addr)
-	http.ListenAndServe(":"+addr, nil)
-}
-
-func newDB() *gorm.DB {
-	log.Info("Connecting to database...")
-	db, err := gorm.Open(sqlite.Open("hosts.db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
-	log.Info("Connect to database.")
-	log.Info("Migrating database...")
-	db.AutoMigrate(&Host{})
-	log.Info("Migrated database.")
-
-	return db
-}
+var app *App
 
 func main() {
-	app := newApp()
+	app = newApp()
 	//populateHosts()
 	app.Serve()
 }
@@ -80,7 +46,7 @@ func populateHosts() {
 			hash.Write([]byte(hostname))
 			encoded := base64.StdEncoding.EncodeToString(hash.Sum(nil))
 			host := Host{Hostname: encoded}
-			err = db.Where(Host{Hostname: encoded}).FirstOrCreate(&host).Error
+			err = app.db.Where(Host{Hostname: encoded}).FirstOrCreate(&host).Error
 			if err != nil {
 				panic("unable to write host to database: " + hostname)
 			}
