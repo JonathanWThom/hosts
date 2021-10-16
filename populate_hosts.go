@@ -16,34 +16,41 @@ const defaultHostsUrl = "https://raw.githubusercontent.com/StevenBlack/hosts/mas
 
 func populateHosts() {
 	log.Info("Populating hosts...")
-	res, err := http.Get(hostsUrl)
-	defer res.Body.Close()
 
+	res, err := http.Get(hostsUrl)
 	if err != nil {
 		panic("unable to fetch hosts source")
 	}
+	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		panic("unable to read hosts source")
 	}
+
 	lines := strings.Split(string(body), "\n")
 	for _, line := range lines {
-		if strings.HasPrefix(line, "0.0.0.0") {
-			hostname := strings.ReplaceAll(line, "0.0.0.0 ", "")
-			// add shared salt key
-			key := getEnv("HASH_KEY", "")
-			hash := hmac.New(sha256.New, []byte(key))
-			hash.Write([]byte(hostname))
-			encoded := base64.StdEncoding.EncodeToString(hash.Sum(nil))
-			host := Host{Hostname: encoded}
-			err = app.db.Where(Host{Hostname: encoded}).FirstOrCreate(&host).Error
-			if err != nil {
-				panic("unable to write host to database: " + hostname)
-			}
-			fmt.Println("wrote: " + hostname + " as " + encoded)
-		}
+		writeHashedKey(line)
 	}
 
 	log.Info("Populated hosts.")
+}
+
+func writeHashedKey(line string) {
+	if strings.HasPrefix(line, "0.0.0.0") {
+		rawHost := strings.ReplaceAll(line, "0.0.0.0 ", "")
+		hashedHost := hashAndEncodeHost(rawHost)
+		host := Host{Hostname: hashedHost}
+		err := app.db.Where(Host{Hostname: hashedHost}).FirstOrCreate(&host).Error
+		if err != nil {
+			panic("unable to write host to database: " + rawHost)
+		}
+		fmt.Println("wrote: " + rawHost + " as " + hashedHost)
+	}
+}
+
+func hashAndEncodeHost(rawHost string) string {
+	hash := hmac.New(sha256.New, []byte(hashKey))
+	hash.Write([]byte(rawHost))
+	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }

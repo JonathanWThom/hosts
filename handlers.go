@@ -19,12 +19,6 @@ type Response struct {
 }
 
 func allowUrl(encodedAndHashedHost string) (bool, bool) {
-	//u, err := url.Parse(encodedAndHashedUrl)
-	//if err != nil {
-	//log.Error(err)
-	//return false, false
-	//}
-
 	host := Host{}
 	app.db.Where("hostname = ?", encodedAndHashedHost).First(&host)
 	if host.ID != 0 {
