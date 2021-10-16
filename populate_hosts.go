@@ -50,6 +50,7 @@ func writeHashedKey(line string) {
 }
 
 func hashAndEncodeHost(rawHost string) string {
+	hashKey := getEnv("HASH_KEY", "")
 	hash := hmac.New(sha256.New, []byte(hashKey))
 	hash.Write([]byte(rawHost))
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))

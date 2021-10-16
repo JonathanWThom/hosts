@@ -14,8 +14,8 @@ start:
 	go run ./...
 
 pop:
-	go run ./... -p -k $(k)
+	go run ./... -p
 
 popc:
-	go run ./... -p -h $(h) -k $(k)
+	go run ./... -p -h $(h)
 

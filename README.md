@@ -12,10 +12,10 @@ you need two things:
 
 2) (Optionally) A key that will be used to hash the values as they are written
 to the database. This key will need to be shared with any clients of the
-service.
+service. `export HASH_KEY="your-key-value"` prior to running the populate task.
 
 [Install Go](https://golang.org/doc/install) and then run `make popc
-h=<your-hosts-url> k=<your-shared-key>.
+h=<your-hosts-url>`
 
 On `make start`, a server will be available that responds to one API request:
 `curl 'localhost:8080/allow?url=<your-hashed-and-encoded-hostname>\n' -i`
