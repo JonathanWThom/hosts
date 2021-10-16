@@ -39,6 +39,17 @@ The response will be JSON of either `{"allow":true}` or `{"allow":false}.
 `make build` and `make push` will build and push a container (including the
 hosts.db file) to a repository of your choice.
 
+For Heroku deployment:
+
+1) Populate your hosts file locally or on CI with `export HASH_KEY="your-hash-key" && make popc h="your-hosts-url"`
+
+2) `heroku container:login`
+
+3) `heroku container:push web`
+
+4) `heroku container:release web`
+
+
 ### License
 
 MIT
