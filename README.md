@@ -8,7 +8,7 @@ Hosts are looked up from a SQLite database at `hosts.db`. This database must be
 populate and shipped with the deployment of this application. To populate it,
 you need two things:
 
-1) A URL contain a list of hostnames you want to block (such as [this](https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts)).
+1) A URL contain a list of hostnames you want to block (ideally one formatted like [this](https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts)).
 
 2) (Optionally) A key that will be used to hash the values as they are written
 to the database. This key will need to be shared with any clients of the
@@ -18,7 +18,7 @@ service. `export HASH_KEY="your-key-value"` prior to running the populate task.
 h=<your-hosts-url>`
 
 On `make start`, a server will be available that responds to one API request:
-`curl 'localhost:8080/allow?url=<your-hashed-and-encoded-hostname>\n' -i`
+`curl 'localhost:8080/allow?url=<your-hashed-and-encoded-hostname>' -i`
 
 ### Clients
 
