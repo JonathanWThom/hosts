@@ -10,3 +10,12 @@ build:
 push:
 	@docker push ${NAME}
 
+start:
+	go run ./...
+
+pop:
+	go run ./... -p
+
+popc:
+	go run ./... -p -h $(h)
+
