@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const defaultHostsUrl = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts"
+const defaultHostsUrl = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
 
 func populateHosts() {
 	log.Info("Populating hosts...")
